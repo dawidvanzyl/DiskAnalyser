@@ -4,25 +4,38 @@ namespace DiskAnalyser.Presenters.Composites
 {
     public interface IFileSystemNode
     {
+        string FullName { get; }
+
         string Name { get; }
 
-        ImmutableArray<IFileSystemNode> GetNodes();
+        IFileSystemNode ParentNode { get; }
+
         long Size { get; }
+
         long TotalSize { get; }
+
+        ImmutableArray<IFileSystemNode> GetChildren();
     }
 
     public abstract class AbstractFileSystemNode : IFileSystemNode
     {
-        protected AbstractFileSystemNode(string name)
+        protected AbstractFileSystemNode(string name, string fullName, IFileSystemNode ParentNode)
         {
             Name = name;
+            FullName = fullName;
+            this.ParentNode = ParentNode;
         }
+
+        public string FullName { get; }
 
         public string Name { get; }
 
-        public abstract ImmutableArray<IFileSystemNode> GetNodes();
+        public IFileSystemNode ParentNode { get; }
 
         public abstract long Size { get; }
+
         public abstract long TotalSize { get; }
+
+        public abstract ImmutableArray<IFileSystemNode> GetChildren();
     }
 }

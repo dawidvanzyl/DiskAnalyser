@@ -39,11 +39,7 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.lblCurrentDirectory = new System.Windows.Forms.ToolStripLabel();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lvDirectories = new System.Windows.Forms.ListView();
-            this.headerName = new System.Windows.Forms.ColumnHeader();
-            this.headerFiles = new System.Windows.Forms.ColumnHeader();
-            this.headerSpace = new System.Windows.Forms.ColumnHeader();
-            this.headerSpacePercentage = new System.Windows.Forms.ColumnHeader();
+            this.tvTreeView = new System.Windows.Forms.TreeView();
             this.toolStrip1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -120,50 +116,21 @@
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.lvDirectories);
+            this.panel1.Controls.Add(this.tvTreeView);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 25);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1057, 538);
             this.panel1.TabIndex = 11;
             // 
-            // lvDirectories
+            // tvTreeView
             // 
-            this.lvDirectories.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.headerName,
-            this.headerFiles,
-            this.headerSpace,
-            this.headerSpacePercentage});
-            this.lvDirectories.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvDirectories.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.lvDirectories.HideSelection = false;
-            this.lvDirectories.Location = new System.Drawing.Point(0, 0);
-            this.lvDirectories.MultiSelect = false;
-            this.lvDirectories.Name = "lvDirectories";
-            this.lvDirectories.Size = new System.Drawing.Size(1057, 538);
-            this.lvDirectories.TabIndex = 6;
-            this.lvDirectories.UseCompatibleStateImageBehavior = false;
-            this.lvDirectories.View = System.Windows.Forms.View.Details;
-            // 
-            // headerName
-            // 
-            this.headerName.Text = "Name";
-            this.headerName.Width = 750;
-            // 
-            // headerFiles
-            // 
-            this.headerFiles.Text = "Files";
-            this.headerFiles.Width = 120;
-            // 
-            // headerSpace
-            // 
-            this.headerSpace.Text = "Space";
-            this.headerSpace.Width = 80;
-            // 
-            // headerSpacePercentage
-            // 
-            this.headerSpacePercentage.Text = "Space (%)";
-            this.headerSpacePercentage.Width = 80;
+            this.tvTreeView.Cursor = System.Windows.Forms.Cursors.Default;
+            this.tvTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tvTreeView.Location = new System.Drawing.Point(0, 0);
+            this.tvTreeView.Name = "tvTreeView";
+            this.tvTreeView.Size = new System.Drawing.Size(1057, 538);
+            this.tvTreeView.TabIndex = 0;
             // 
             // main
             // 
@@ -196,11 +163,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripLabel lblCurrentDirectory;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ListView lvDirectories;
-        private System.Windows.Forms.ColumnHeader headerName;
-        private System.Windows.Forms.ColumnHeader headerFiles;
-        private System.Windows.Forms.ColumnHeader headerSpace;
-        private System.Windows.Forms.ColumnHeader headerSpacePercentage;
+        private System.Windows.Forms.TreeView tvTreeView;
     }
 }
 

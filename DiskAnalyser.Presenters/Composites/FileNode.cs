@@ -1,4 +1,4 @@
-﻿using DiskAnalyser.Presenters.Proxies;
+﻿using DiskAnalyser.Presenters.Models;
 using System.Collections.Immutable;
 
 namespace DiskAnalyser.Presenters.Composites
@@ -7,23 +7,23 @@ namespace DiskAnalyser.Presenters.Composites
     {
         private readonly long size;
 
-        public override long Size => size;
-        public override long TotalSize => size;
-
-        private FileNode(string name, long size)
-            : base(name)
+        private FileNode(string name, string fullName, DirectoryNode parentNode, long size)
+            : base(name, fullName, parentNode)
         {
             this.size = size;
         }
 
-        internal static FileNode From(IFileProxy fileProxy)
-        {
-            return new FileNode(fileProxy.Name, fileProxy.Size);
-        }
+        public override long Size => size;
+        public override long TotalSize => size;
 
-        public override ImmutableArray<IFileSystemNode> GetNodes()
+        public override ImmutableArray<IFileSystemNode> GetChildren()
         {
             return new ImmutableArray<IFileSystemNode>();
+        }
+
+        internal static FileNode From(IFileModel fileModel, DirectoryNode parentNode)
+        {
+            return new FileNode(fileModel.Name, fileModel.FullName, parentNode, fileModel.Size);
         }
     }
 }

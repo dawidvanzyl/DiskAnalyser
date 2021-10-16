@@ -5,13 +5,13 @@ namespace DiskAnalyser.Presenters.EventArguments
 {
     public class DirectoryAnalysedEventArgs : EventArgs
     {
-        public DirectoryAnalysedEventArgs(string directory, DirectoryNode rootDirectoryNode)
+        public DirectoryAnalysedEventArgs(string directory, DirectoryNode directoryNode)
         {
             Directory = directory;
-            RootDirectoryNode = rootDirectoryNode;
+            DirectoryNode = directoryNode;
         }
 
         public string Directory { get; }
-        public DirectoryNode RootDirectoryNode { get; }
+        public DirectoryNode DirectoryNode { get; }
     }
 }

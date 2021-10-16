@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiskAnalyser.Tests", "DiskAnalyser.Tests\DiskAnalyser.Tests.csproj", "{BF44D92B-E83D-4148-8327-6446F751E7B9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiskAnalyser.Presenters", "DiskAnalyser.Presenters\DiskAnalyser.Presenters.csproj", "{420DF8F2-B6E4-483C-8159-093A78E42042}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiskAnalyser.Models", "DiskAnalyser.Models\DiskAnalyser.Models.csproj", "{38720139-17E9-4684-B734-55F6E8F8B10B}"
@@ -13,16 +11,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiskAnalyser.IoC", "DiskAna
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiskAnalyser", "DiskAnalyser\DiskAnalyser.csproj", "{AE094AFB-C95D-4B21-8850-045443FDF6E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiskAnalyser.Views", "DiskAnalyser.Views\DiskAnalyser.Views.csproj", "{7A626EA8-C961-40CD-BF4D-67F7C1735DD1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BF44D92B-E83D-4148-8327-6446F751E7B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF44D92B-E83D-4148-8327-6446F751E7B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF44D92B-E83D-4148-8327-6446F751E7B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF44D92B-E83D-4148-8327-6446F751E7B9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{420DF8F2-B6E4-483C-8159-093A78E42042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{420DF8F2-B6E4-483C-8159-093A78E42042}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{420DF8F2-B6E4-483C-8159-093A78E42042}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +35,10 @@ Global
 		{AE094AFB-C95D-4B21-8850-045443FDF6E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE094AFB-C95D-4B21-8850-045443FDF6E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE094AFB-C95D-4B21-8850-045443FDF6E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A626EA8-C961-40CD-BF4D-67F7C1735DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A626EA8-C961-40CD-BF4D-67F7C1735DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A626EA8-C961-40CD-BF4D-67F7C1735DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A626EA8-C961-40CD-BF4D-67F7C1735DD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,36 +1,56 @@
 ﻿using DiskAnalyser.Models;
 using DiskAnalyser.Presenters.Composites;
 using DiskAnalyser.Presenters.EventArguments;
-using DiskAnalyser.Presenters.Proxies;
+using DiskAnalyser.Presenters.Models;
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace DiskAnalyser.Presenters
 {
     public interface IMainPresenter
     {
-        void InitializeDrives();
-        void ChangeSelectedDrive(string drive);
-        DirectoryNode AnalyseDrive();
-
-        event EventHandler<DrivesInitializedEventArgs> DrivesInitialized;        
-        event EventHandler<DirectoryAnalysedEventArgs> DirectoryAnalysed;
         event EventHandler<EventArgs> AnalysisCompleted;
+
+        event EventHandler<DirectoryAnalysedEventArgs> DirectoryAnalysed;
+
+        event EventHandler<DirectoryNodeAddedEventArgs> DirectoryNodeAdded;
+
+        event EventHandler<DrivesInitializedEventArgs> DrivesInitialized;
+
+        DriveNode AnalyseDrive();
+
+        void ChangeSelectedDrive(string drive);
+
+        void InitializeDrives();
     }
 
     public class MainPresenter : IMainPresenter
     {
         private readonly IMainModel model;
 
-        public event EventHandler<DrivesInitializedEventArgs> DrivesInitialized;
-        public event EventHandler<DirectoryAnalysedEventArgs> DirectoryAnalysed;
-        public event EventHandler<EventArgs> AnalysisCompleted;
-
         public MainPresenter(IMainModel model)
         {
             this.model = model;
+        }
+
+        public event EventHandler<EventArgs> AnalysisCompleted;
+
+        public event EventHandler<DirectoryAnalysedEventArgs> DirectoryAnalysed;
+
+        public event EventHandler<DirectoryNodeAddedEventArgs> DirectoryNodeAdded;
+
+        public event EventHandler<DrivesInitializedEventArgs> DrivesInitialized;
+
+        public DriveNode AnalyseDrive()
+        {
+            var driveNode = DriveNode.From(model.Drive, model.Drive);
+            var directory = DirectoryModel.From(model.Drive);
+            AnalyseDirectory(directory, driveNode, driveNode, driveNode);
+
+            AnalysisCompleted?.Invoke(this, new EventArgs());
+
+            return driveNode;
         }
 
         public void ChangeSelectedDrive(string drive)
@@ -48,35 +68,25 @@ namespace DiskAnalyser.Presenters
             DrivesInitialized?.Invoke(this, new DrivesInitializedEventArgs(initialisedDrives));
         }
 
-        public DirectoryNode AnalyseDrive()
-        {
-            var rootDirectoryNode = DirectoryNode.From(model.Drive);
-            var directory = DirectoryProxy.From(model.Drive);
-            AnalyseDirectory(directory, rootDirectoryNode, rootDirectoryNode);
-
-            AnalysisCompleted?.Invoke(this, new EventArgs());
-
-            return rootDirectoryNode;
-        }
-
-        private void AnalyseDirectory(IDirectoryProxy directory, DirectoryNode directoryNode, DirectoryNode rootDirectoryNode)
+        private void AnalyseDirectory(IDirectoryModel directory, DirectoryNode directoryNode, DirectoryNode rootDirectoryNode, DriveNode driveNode)
         {
             if (directory.HasSubDirectories())
             {
                 var subDirectories = directory.GetDirectories();
                 foreach (var subDirectory in subDirectories)
                 {
-                    var subDirectoryNode = DirectoryNode.From(subDirectory.Name, directoryNode);
+                    var subDirectoryNode = DirectoryNode.From(subDirectory.Name, subDirectory.FullName, directoryNode, driveNode);
                     directoryNode.AddDirectoryNode(subDirectoryNode);
+                    DirectoryNodeAdded?.Invoke(this, new DirectoryNodeAddedEventArgs(subDirectory, directoryNode));
 
-                    AnalyseDirectory(subDirectory, subDirectoryNode, rootDirectoryNode);
+                    AnalyseDirectory(subDirectory, subDirectoryNode, rootDirectoryNode, driveNode);
                 }
             }
 
             if (directory.HasFiles())
             {
                 var fileLeaves = directory.GetFiles()
-                    .Select(fileProxy => FileNode.From(fileProxy));
+                    .Select(fileModel => FileNode.From(fileModel, directoryNode));
 
                 directoryNode.AddFileNodes(fileLeaves);
             }

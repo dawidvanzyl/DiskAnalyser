@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Drawing;
 using System.Linq;
 
 namespace DiskAnalyser.Presenters.Composites
@@ -9,25 +7,24 @@ namespace DiskAnalyser.Presenters.Composites
     public class DirectoryNode : AbstractFileSystemNode
     {
         private readonly List<IFileSystemNode> children;
+        private readonly DriveNode driveNode;
         private readonly DirectoryNode parentNode;
         private long size;
         private long totalSize;
 
-        private DirectoryNode(string name) 
-            : base(name)
+        protected DirectoryNode(string name, string fullName, DirectoryNode parentNode, DriveNode driveNode)
+            : base(name, fullName, parentNode)
         {
             children = new List<IFileSystemNode>();
-        }
-
-        private DirectoryNode(string name, DirectoryNode parentNode)
-            : this (name)
-        {
             this.parentNode = parentNode;
+            this.driveNode = driveNode;
         }
 
+        public IFileSystemNode DriveNode => driveNode;
         public int FileNodes { get; private set; }
-        public int TotalFileNodes { get; private set; }
         public override long Size => size;
+
+        public int TotalFileNodes { get; private set; }
         public override long TotalSize => totalSize;
 
         public void AddDirectoryNode(DirectoryNode node)
@@ -45,10 +42,14 @@ namespace DiskAnalyser.Presenters.Composites
             UpdateTotalSize(size);
         }
 
-        private void UpdateTotalSize(long size)
+        public override ImmutableArray<IFileSystemNode> GetChildren()
         {
-            totalSize += size;
-            parentNode?.UpdateTotalSize(size);
+            return children.ToImmutableArray();
+        }
+
+        internal static DirectoryNode From(string name, string fullName, DirectoryNode parentNode, DriveNode driveNode)
+        {
+            return new DirectoryNode(name, fullName, parentNode, driveNode);
         }
 
         private void UpdateTotalFiles(int fileNodes)
@@ -57,19 +58,10 @@ namespace DiskAnalyser.Presenters.Composites
             parentNode?.UpdateTotalFiles(fileNodes);
         }
 
-        internal static DirectoryNode From(string name)
+        private void UpdateTotalSize(long size)
         {
-            return new DirectoryNode(name);
+            totalSize += size;
+            parentNode?.UpdateTotalSize(size);
         }
-
-        internal static DirectoryNode From(string name, DirectoryNode parentNode)
-        {
-            return new DirectoryNode(name, parentNode);
-        }
-
-        public override ImmutableArray<IFileSystemNode> GetNodes()
-        {
-            return children.ToImmutableArray();
-        }        
     }
 }
