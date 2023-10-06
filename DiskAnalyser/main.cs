@@ -1,144 +1,183 @@
-﻿using DiskAnalyser.Converters;
+﻿using DiskAnalyser.Models;
 using DiskAnalyser.Presenters;
-using DiskAnalyser.Presenters.Composites;
-using DiskAnalyser.Presenters.EventArguments;
+using DiskAnalyser.Views;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace DiskAnalyser
 {
-    public partial class main : Form
+    public partial class main : Form, IMainView
     {
-        private readonly BackgroundWorker driveAnalysisWorker;
-        private readonly NodeSizeComparer nodeSizeComparer;
-        private readonly IMainPresenter presenter;
+        private readonly IMainPresenter _presenter;
+        private readonly IServiceProvider _serviceProvider;
 
-        public main(IPresenterFactory presenterFactory)
+        //private readonly BackgroundWorker driveAnalysisWorker;
+
+        public main(IMainPresenter mainPresenter, IServiceProvider serviceProvider)
         {
             InitializeComponent();
 
-            cmbDrives.SelectedIndexChanged += this.CmbDrives_SelectedIndexChanged;
-            btnAnalyseDrive.Click += this.BtnAnalyseDrive_Clicked;
+            _presenter = mainPresenter;
+            _serviceProvider = serviceProvider;
 
-            presenter = presenterFactory.CreateMainPresenter();
-            presenter.DrivesInitialized += Presenter_DrivesInitialized;
-            presenter.DirectoryNodeAdded += Presenter_DirectoryNodeAdded;
+            //cmbDrives.SelectedIndexChanged += this.CmbDrives_SelectedIndexChanged;
+            //btnAnalyseDrive.Click += this.BtnAnalyseDrive_Clicked;
 
-            driveAnalysisWorker = new BackgroundWorker
-            {
-                WorkerReportsProgress = true
-            };
-            driveAnalysisWorker.DoWork += DriveAnalysisWorker_DoWork;
-            driveAnalysisWorker.ProgressChanged += DriveAnalysisWorker_ProgressChanged;
-            driveAnalysisWorker.RunWorkerCompleted += DriveAnalysisWorker_RunWorkerCompleted;
+            //presenter = presenterFactory.CreateMainPresenter();
+            //presenter.DrivesInitialized += Presenter_DrivesInitialized;
+            //presenter.DirectoryNodeAdded += Presenter_DirectoryNodeAdded;
 
-            nodeSizeComparer = NodeSizeComparer.Create();
+            //driveAnalysisWorker = new BackgroundWorker
+            //{
+            //    WorkerReportsProgress = true,
+            //    WorkerSupportsCancellation = true
+            //};
+            //driveAnalysisWorker.DoWork += DriveAnalysisWorker_DoWork;
+            //driveAnalysisWorker.ProgressChanged += DriveAnalysisWorker_ProgressChanged;
+            //driveAnalysisWorker.RunWorkerCompleted += DriveAnalysisWorker_RunWorkerCompleted;
 
-            presenter.InitializeDrives();
+            //nodeSizeComparer = NodeSizeComparer.Create();
+
+            //presenter.InitializeDrives();
         }
 
-        private void BtnAnalyseDrive_Clicked(object sender, System.EventArgs e)
+        public void DirectoryAdded(IFileSystemDescriptionModel subDirectory, IFileSystemDescriptionModel directory)
+        {
+            var treeNode = tvTreeView.Nodes
+                .Find(directory.FullName, searchAllChildren: true)
+                .SingleOrDefault();
+
+            if (treeNode is null)
+            {
+                treeNode = new TreeNode
+                {
+                    Name = directory.FullName,
+                    Text = directory.Name
+                };
+
+                tvTreeView.Nodes.Add(treeNode);
+            }
+
+            treeNode.Nodes.Add(
+                subDirectory.FullName,
+                subDirectory.Name);
+
+            //tvTreeView.Update();
+        }
+
+        public void SetDrives(IList<DriveModel> driveModels)
+        {
+            cmbDrives.ComboBox.DataSource = driveModels;
+            cmbDrives.ComboBox.DisplayMember = "Description";
+            cmbDrives.ComboBox.ValueMember = "DriveInfo";
+        }
+
+        private void btnAnalyseDrive_Click(object sender, System.EventArgs e)
         {
             tvTreeView.Nodes.Clear();
-            driveAnalysisWorker.RunWorkerAsync();
+
+            var analyse = _serviceProvider.GetRequiredService<analyse>();
+            var analyseView = analyse as IAnalysisView;
+            analyseView.SetParent(this);
+            analyseView.SetSelectedDrive((DriveInfo)cmbDrives.ComboBox.SelectedValue);
+            analyse.ShowDialog();
         }
 
-        private void CmbDrives_SelectedIndexChanged(object sender, System.EventArgs e)
+        private void main_Load(object sender, System.EventArgs e)
         {
-            var selectedValue = (KeyValuePair<string, string>)cmbDrives.ComboBox.SelectedValue;
-            presenter.ChangeSelectedDrive(selectedValue.Key);
+            _presenter.SetView(this);
         }
 
-        private void DriveAnalysisWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            presenter.AnalyseDrive();
-        }
+        ////private void DriveAnalysisWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        ////{
+        ////    var directoryNodeAddedEventArgs = e.UserState as DirectoryNodeAddedEventArgs;
 
-        private void DriveAnalysisWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            tvTreeView.BeginUpdate();
-            var directoryNodeAddedEventArgs = e.UserState as DirectoryNodeAddedEventArgs;
+        ////    TreeNode treeNode = default;
+        ////    var directoryNode = directoryNodeAddedEventArgs.DirectoryNode;
 
-            TreeNode treeNode = default;
-            IFileSystemNode directoryNode = directoryNodeAddedEventArgs.DirectoryNode;
+        ////    treeNode = tvTreeView.Nodes
+        ////        .Find(directoryNode.FullName, searchAllChildren: true)
+        ////        .SingleOrDefault();
 
-            while (treeNode is null)
-            {
-                treeNode = tvTreeView.Nodes
-                    .Find(directoryNode.FullName, searchAllChildren: true)
-                    .SingleOrDefault();
+        ////    if (treeNode is null)
+        ////    {
+        ////        treeNode = new TreeNode
+        ////        {
+        ////            Name = directoryNodeAddedEventArgs.DirectoryNode.FullName,
+        ////            Text = directoryNodeAddedEventArgs.DirectoryNode.Name
+        ////        };
 
-                if (directoryNode.ParentNode != null)
-                {
-                }
+        ////        tvTreeView.Nodes.Add(treeNode);
+        ////    }
 
-                if (treeNode is null)
-                {
-                    treeNode = new TreeNode
-                    {
-                        Name = directoryNodeAddedEventArgs.DirectoryNode.FullName,
-                        Text = directoryNodeAddedEventArgs.DirectoryNode.Name
-                    };
+        ////    treeNode.Nodes.Add(
+        ////        directoryNodeAddedEventArgs.DirectoryModel.FullName,
+        ////        directoryNodeAddedEventArgs.DirectoryModel.Name);
+        ////}
 
-                    tvTreeView.Nodes.Add(treeNode);
-                }
-                else
-                {
-                    directoryNode = directoryNode.ParentNode;
-                }
-            }
+        //private void DriveAnalysisWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        //{
+        //    lblCurrentDirectory.Text = $"Analysis Completed";
+        //}
 
-            if (!treeNode.Nodes.ContainsKey(directoryNodeAddedEventArgs.DirectoryModel.FullName))
-            {
-                treeNode.Nodes.Add(
-                    directoryNodeAddedEventArgs.DirectoryModel.FullName,
-                    directoryNodeAddedEventArgs.DirectoryModel.Name);
-            }
+        //private void Presenter_DirectoryNodeAdded(object sender, DirectoryNodeAddedEventArgs e)
+        //{
+        //    //driveAnalysisWorker.ReportProgress(0, e);
 
-            tvTreeView.EndUpdate();
-            tvTreeView.Refresh();
+        //    var directoryNodeAddedEventArgs = e; //.UserState as DirectoryNodeAddedEventArgs;
 
-            lblCurrentDirectory.Text = directoryNodeAddedEventArgs.DirectoryModel.FullName;
-            //lblTotalFiles.Text = $"Files: {directoryNodeAddedEventArgs.DirectoryNode.TotalFileNodes}".PadRight(20, ' ');
-        }
+        //    TreeNode treeNode = default;
+        //    var directoryNode = directoryNodeAddedEventArgs.DirectoryNode;
 
-        private void DriveAnalysisWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            lblCurrentDirectory.Text = "Analysis Completed";
-        }
+        //    treeNode = tvTreeView.Nodes
+        //        .Find(directoryNode.FullName, searchAllChildren: true)
+        //        .SingleOrDefault();
 
-        private void Presenter_DirectoryNodeAdded(object sender, DirectoryNodeAddedEventArgs e)
-        {
-            driveAnalysisWorker.ReportProgress(0, e);
+        //    if (treeNode is null)
+        //    {
+        //        treeNode = new TreeNode
+        //        {
+        //            Name = directoryNodeAddedEventArgs.DirectoryNode.FullName,
+        //            Text = directoryNodeAddedEventArgs.DirectoryNode.Name
+        //        };
 
-            lblCurrentDirectory.Text = e.DirectoryModel.Name;
-            lblTotalFiles.Text = $"Files: {((DirectoryNode)e.DirectoryNode).TotalFileNodes}".PadRight(20, ' ');
-        }
+        //        tvTreeView.Nodes.Add(treeNode);
+        //    }
 
-        private void Presenter_DrivesInitialized(object sender, DrivesInitializedEventArgs e)
-        {
-            cmbDrives.ComboBox.DataSource = e.Drives.ToList();
-            cmbDrives.ComboBox.DisplayMember = "Value";
-            cmbDrives.ComboBox.ValueMember = "Key";
-        }
+        //    treeNode.Nodes.Add(
+        //        directoryNodeAddedEventArgs.DirectoryModel.FullName,
+        //        directoryNodeAddedEventArgs.DirectoryModel.Name);
 
-        private void TryAdd(TreeNodeCollection nodes, IFileSystemNode fileSystemNode)
-        {
-            var treeNode = nodes.ContainsKey(fileSystemNode.Name)
-                ? nodes.Find(fileSystemNode.Name, searchAllChildren: true).Single()
-                : nodes.Add(fileSystemNode.Name, fileSystemNode.Name);
+        //    lblCurrentDirectory.Text = e.DirectoryModel.FullName;
 
-            ImmutableArray<IFileSystemNode> children = fileSystemNode.GetChildren();
-            if (children != null && children.Any())
-            {
-                foreach (var child in children)
-                {
-                    TryAdd(treeNode.Nodes, child);
-                }
-            }
-        }
+        //    this.Refresh();
+        //}
+
+        //private void Presenter_DrivesInitialized(object sender, DrivesInitializedEventArgs e)
+        //{
+        //    cmbDrives.ComboBox.DataSource = e.Drives.ToList();
+        //    cmbDrives.ComboBox.DisplayMember = "Value";
+        //    cmbDrives.ComboBox.ValueMember = "Key";
+        //}
+
+        //private void TryAdd(TreeNodeCollection nodes, IFileSystemNode fileSystemNode)
+        //{
+        //    var treeNode = nodes.ContainsKey(fileSystemNode.Name)
+        //        ? nodes.Find(fileSystemNode.Name, searchAllChildren: true).Single()
+        //        : nodes.Add(fileSystemNode.Name, fileSystemNode.Name);
+
+        //    ImmutableArray<IFileSystemNode> children = fileSystemNode.GetChildren();
+        //    if (children != null && children.Any())
+        //    {
+        //        foreach (var child in children)
+        //        {
+        //            TryAdd(treeNode.Nodes, child);
+        //        }
+        //    }
+        //}
     }
 }

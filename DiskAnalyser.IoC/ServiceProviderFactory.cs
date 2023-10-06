@@ -1,7 +1,5 @@
-﻿using DiskAnalyser.Models;
-using DiskAnalyser.Presenters;
+﻿using DiskAnalyser.Presenters;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace DiskAnalyser.IoC
 {
@@ -11,7 +9,8 @@ namespace DiskAnalyser.IoC
         {
             return new ServiceCollection()
                  .AddLogging()
-                 .AddSingleton<IPresenterFactory, PresenterFactory>();
+                 .AddSingleton<IMainPresenter, MainPresenter>()
+                 .AddSingleton<IAnalysePresenter, AnalysePresenter>();
         }
     }
 }

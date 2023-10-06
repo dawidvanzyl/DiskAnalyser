@@ -5,23 +5,24 @@ using System.Windows.Forms;
 
 namespace DiskAnalyser
 {
-    static class Program
+    internal static class Program
     {
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             var serviceProvider = ServiceProviderFactory.CreateServiceCollection()
-                .AddSingleton<main>()
+                .AddTransient<main>()
+                .AddTransient<analyse>()
                 .BuildServiceProvider();
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            var main = serviceProvider.GetService(typeof(main)) as main;
+            var main = serviceProvider.GetRequiredService<main>();
             Application.Run(main);
         }
     }

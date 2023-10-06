@@ -1,13 +1,10 @@
-﻿using System.Collections.Immutable;
+﻿using DiskAnalyser.Models;
+using System.Collections.Immutable;
 
 namespace DiskAnalyser.Presenters.Composites
 {
-    public interface IFileSystemNode
+    public interface IFileSystemNode : IFileSystemDescriptionModel
     {
-        string FullName { get; }
-
-        string Name { get; }
-
         IFileSystemNode ParentNode { get; }
 
         long Size { get; }

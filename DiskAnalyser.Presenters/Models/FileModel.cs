@@ -1,11 +1,10 @@
-﻿using System.IO;
+﻿using DiskAnalyser.Models;
+using System.IO;
 
 namespace DiskAnalyser.Presenters.Models
 {
-    public interface IFileModel
+    public interface IFileModel : IFileSystemDescriptionModel
     {
-        string FullName { get; }
-        string Name { get; }
         long Size { get; }
     }
 
@@ -18,9 +17,9 @@ namespace DiskAnalyser.Presenters.Models
             this.fileInfo = fileInfo;
         }
 
-        public long Size => fileInfo.Length;
         public string FullName => fileInfo.FullName;
         public string Name => fileInfo.Name;
+        public long Size => fileInfo.Length;
 
         internal static IFileModel From(FileInfo fileInfo)
         {

@@ -1,14 +1,14 @@
-﻿using System;
+﻿using DiskAnalyser.Models;
+using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
 namespace DiskAnalyser.Presenters.Models
 {
-    public interface IDirectoryModel
+    public interface IDirectoryModel : IFileSystemDescriptionModel
     {
-        string FullName { get; }
-        string Name { get; }
+        long FileCount { get; }
 
         ImmutableArray<IDirectoryModel> GetDirectories();
 
@@ -30,7 +30,9 @@ namespace DiskAnalyser.Presenters.Models
             this.directoryInfo = directoryInfo;
         }
 
+        public long FileCount => throw new NotImplementedException();
         public string FullName => directoryInfo.FullName;
+
         public string Name => directoryInfo.Name;
 
         public static IDirectoryModel From(string drive)
@@ -50,8 +52,8 @@ namespace DiskAnalyser.Presenters.Models
             try
             {
                 return directoryInfo.GetFiles()
-                        .Select(fileInfo => FileModel.From(fileInfo))
-                        .ToImmutableArray();
+                    .Select(fileInfo => FileModel.From(fileInfo))
+                    .ToImmutableArray();
             }
             catch (DirectoryNotFoundException)
             {
@@ -66,7 +68,6 @@ namespace DiskAnalyser.Presenters.Models
         public long GetSize()
         {
             var files = directoryInfo.GetFiles();
-            var numberOfFiles = files.Length;
             var size = files.Sum(fileInfo => fileInfo.Length);
 
             return size;

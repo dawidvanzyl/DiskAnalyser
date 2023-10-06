@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\DiskAnalyser.IoC\DiskAnalyser.IoC.csproj" />
+	  <ProjectReference Include="..\DiskAnalyser.Views\DiskAnalyser.Views.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>
