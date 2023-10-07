@@ -30,6 +30,7 @@
         {
             this.panel1 = new System.Windows.Forms.Panel();
             this.gbxAnalysis = new System.Windows.Forms.GroupBox();
+            this.lblTotalFiles = new System.Windows.Forms.Label();
             this.lblCurrentDirectory = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.fontDialog1 = new System.Windows.Forms.FontDialog();
@@ -49,6 +50,7 @@
             // 
             // gbxAnalysis
             // 
+            this.gbxAnalysis.Controls.Add(this.lblTotalFiles);
             this.gbxAnalysis.Controls.Add(this.lblCurrentDirectory);
             this.gbxAnalysis.Controls.Add(this.btnCancel);
             this.gbxAnalysis.Location = new System.Drawing.Point(3, -1);
@@ -58,13 +60,20 @@
             this.gbxAnalysis.TabStop = false;
             this.gbxAnalysis.Text = "Directory being analysed";
             // 
+            // lblTotalFiles
+            // 
+            this.lblTotalFiles.AutoSize = true;
+            this.lblTotalFiles.Location = new System.Drawing.Point(8, 78);
+            this.lblTotalFiles.Name = "lblTotalFiles";
+            this.lblTotalFiles.Size = new System.Drawing.Size(0, 15);
+            this.lblTotalFiles.TabIndex = 3;
+            // 
             // lblCurrentDirectory
             // 
             this.lblCurrentDirectory.Location = new System.Drawing.Point(6, 19);
             this.lblCurrentDirectory.Name = "lblCurrentDirectory";
             this.lblCurrentDirectory.Size = new System.Drawing.Size(980, 52);
             this.lblCurrentDirectory.TabIndex = 2;
-            this.lblCurrentDirectory.Text = "label1";
             // 
             // btnCancel
             // 
@@ -90,9 +99,9 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "analyse";
             this.Load += new System.EventHandler(this.analyse_Load);
-            this.Shown += new System.EventHandler(this.analyse_Shown);
             this.panel1.ResumeLayout(false);
             this.gbxAnalysis.ResumeLayout(false);
+            this.gbxAnalysis.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -103,5 +112,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.FontDialog fontDialog1;
         private System.Windows.Forms.Label lblCurrentDirectory;
+        private System.Windows.Forms.Label lblTotalFiles;
     }
 }

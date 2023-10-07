@@ -1,12 +1,10 @@
-﻿using DiskAnalyser.Models;
+﻿using DiskAnalyser.Models.ValueObjects;
 using System.Collections.Generic;
 
 namespace DiskAnalyser.Views
 {
     public interface IMainView
     {
-        void DirectoryAdded(IFileSystemDescriptionModel subDirectory, IFileSystemDescriptionModel directory);
-
-        void SetDrives(IList<DriveModel> driveModels);
+        void SetDrives(IList<DriveValue> drives);
     }
 }

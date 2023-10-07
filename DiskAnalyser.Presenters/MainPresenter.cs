@@ -1,4 +1,4 @@
-﻿using DiskAnalyser.Models;
+﻿using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Views;
 using System.IO;
 using System.Linq;
@@ -18,12 +18,12 @@ namespace DiskAnalyser.Presenters
 
         public void InitializeDrives()
         {
-            var driveModels = DriveInfo.GetDrives()
+            var drives = DriveInfo.GetDrives()
                 .Where(driveInfo => driveInfo.DriveType != DriveType.Removable && driveInfo.IsReady)
-                .Select(driveInfo => new DriveModel(driveInfo))
+                .Select(driveInfo => DriveValue.From(driveInfo))
                 .ToList();
 
-            _view.SetDrives(driveModels);
+            _view.SetDrives(drives);
         }
 
         public void SetView(IMainView view)

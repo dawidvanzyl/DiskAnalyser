@@ -1,15 +1,15 @@
-﻿using DiskAnalyser.Presenters.Composites;
-using DiskAnalyser.Presenters.Models;
+﻿using DiskAnalyser.Models;
+using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Views;
-using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DiskAnalyser.Presenters
 {
     public interface IAnalysePresenter
     {
-        Task AnalyseDriveAsync(DriveInfo driveInfo, AnalysisCancelToken analysisCancelToken);
+        Task<DirectoryModel> AnalyseDriveAsync(DriveValue driveValue, CancellationToken cancellationToken);
 
         void SetView(IAnalysisView view);
     }
@@ -17,16 +17,12 @@ namespace DiskAnalyser.Presenters
     public class AnalysePresenter : IAnalysePresenter
     {
         private IAnalysisView _view;
-        private int i = 0;
 
-        public async Task AnalyseDriveAsync(DriveInfo driveInfo, AnalysisCancelToken analysisCancelToken)
+        public async Task<DirectoryModel> AnalyseDriveAsync(DriveValue driveValue, CancellationToken cancellationToken)
         {
-            await Task.Run(() =>
-            {
-                var driveNode = DriveNode.From(driveInfo.Name, driveInfo.Name);
-                var directoryModel = DirectoryModel.From(driveInfo.Name);
-                AnalyseDirectory(directoryModel, driveNode, driveNode, driveNode, analysisCancelToken);
-            });
+            var drive = DriveModel.From(driveValue.Name, driveValue.Description);
+            var directoryValue = DirectoryValue.From(driveValue.Name);
+            return await AnalyseDirectoryAsync(directoryValue, drive, drive, cancellationToken);
         }
 
         public void SetView(IAnalysisView view)
@@ -34,43 +30,41 @@ namespace DiskAnalyser.Presenters
             _view = view;
         }
 
-        private void AnalyseDirectory(IDirectoryModel directory, DirectoryNode directoryNode, DirectoryNode rootDirectoryNode, DriveNode driveNode, AnalysisCancelToken analysisCancelToken)
+        private async Task<DirectoryModel> AnalyseDirectoryAsync(DirectoryValue directoryValue, DirectoryModel directory, DirectoryModel rootDirectory, CancellationToken cancellationToken)
         {
-            if (analysisCancelToken.Cancelled)
+            return await Task.Run(async () =>
             {
-                return;
-            }
-
-            if (directory.HasSubDirectories())
-            {
-                var subDirectories = directory.GetDirectories();
-                foreach (var subDirectory in subDirectories)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    var subDirectoryNode = DirectoryNode.From(subDirectory.Name, subDirectory.FullName, directoryNode, driveNode);
-                    directoryNode.AddDirectoryNode(subDirectoryNode);
-
-                    i++;
-                    if (i == 1000)
-                    {
-                        i = 0;
-                    }
-
-                    _view.Progress.Report((subDirectory, directoryNode, i));
-
-                    AnalyseDirectory(subDirectory, subDirectoryNode, rootDirectoryNode, driveNode, analysisCancelToken);
+                    return rootDirectory;
                 }
-            }
 
-            if (directory.HasFiles())
-            {
-                var fileLeaves = directory
-                    .GetFiles()
-                    .Select(fileModel => FileNode.From(fileModel, directoryNode));
+                if (directoryValue.HasSubDirectories())
+                {
+                    var subDirectoryValues = directoryValue.GetDirectories();
+                    foreach (var subDirectoryValue in subDirectoryValues)
+                    {
+                        var subDirectory = DirectoryModel.From(subDirectoryValue.Name, subDirectoryValue.FullPath, directory);
+                        directory.AddDirectory(subDirectory);
+                        _view.DirectoryAdded.Report(directory.FullPath);
 
-                directoryNode.AddFileNodes(fileLeaves);
-            }
+                        await AnalyseDirectoryAsync(subDirectoryValue, subDirectory, rootDirectory, cancellationToken);
+                    }
+                }
 
-            //DirectoryAnalysed?.Invoke(this, new DirectoryAnalysedEventArgs(directory.FullName, rootDirectoryNode));
+                if (directoryValue.HasFiles())
+                {
+                    var files = directoryValue
+                        .GetFiles()
+                        .Select(fileValue => FileModel.From(fileValue.Name, fileValue.FullPath, fileValue.Size, directory));
+
+                    directory.AddFiles(files);
+                }
+
+                _view.DirectoryAnalysed.Report(directory.TotalFileCount);
+
+                return rootDirectory;
+            });
         }
     }
 }

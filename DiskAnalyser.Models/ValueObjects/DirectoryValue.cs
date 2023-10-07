@@ -1,67 +1,57 @@
-﻿using DiskAnalyser.Models;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
-namespace DiskAnalyser.Presenters.Models
+namespace DiskAnalyser.Models.ValueObjects
 {
-    public interface IDirectoryModel : IFileSystemDescriptionModel
-    {
-        long FileCount { get; }
-
-        ImmutableArray<IDirectoryModel> GetDirectories();
-
-        ImmutableArray<IFileModel> GetFiles();
-
-        long GetSize();
-
-        bool HasFiles();
-
-        bool HasSubDirectories();
-    }
-
-    public sealed class DirectoryModel : IDirectoryModel
+    public struct DirectoryValue
     {
         private readonly DirectoryInfo directoryInfo;
 
-        private DirectoryModel(DirectoryInfo directoryInfo)
+        private DirectoryValue(DirectoryInfo directoryInfo)
         {
             this.directoryInfo = directoryInfo;
         }
 
         public long FileCount => throw new NotImplementedException();
-        public string FullName => directoryInfo.FullName;
+
+        public string FullPath => directoryInfo.FullName;
 
         public string Name => directoryInfo.Name;
 
-        public static IDirectoryModel From(string drive)
+        public static DirectoryValue From(string drive)
         {
-            return new DirectoryModel(new DirectoryInfo(drive));
+            return new DirectoryValue(new DirectoryInfo(drive));
         }
 
-        public ImmutableArray<IDirectoryModel> GetDirectories()
+        public static DirectoryValue From(DirectoryInfo directoryInfo)
+        {
+            return new DirectoryValue(directoryInfo);
+        }
+
+        public ImmutableArray<DirectoryValue> GetDirectories()
         {
             return directoryInfo.GetDirectories()
                 .Select(directoryInfo => From(directoryInfo))
                 .ToImmutableArray();
         }
 
-        public ImmutableArray<IFileModel> GetFiles()
+        public ImmutableArray<FileValue> GetFiles()
         {
             try
             {
                 return directoryInfo.GetFiles()
-                    .Select(fileInfo => FileModel.From(fileInfo))
+                    .Select(fileInfo => FileValue.From(fileInfo))
                     .ToImmutableArray();
             }
             catch (DirectoryNotFoundException)
             {
-                return new ImmutableArray<IFileModel>();
+                return new ImmutableArray<FileValue>();
             }
             catch (UnauthorizedAccessException)
             {
-                return new ImmutableArray<IFileModel>();
+                return new ImmutableArray<FileValue>();
             }
         }
 
@@ -93,11 +83,6 @@ namespace DiskAnalyser.Presenters.Models
             {
                 return false;
             }
-        }
-
-        internal static IDirectoryModel From(DirectoryInfo directoryInfo)
-        {
-            return new DirectoryModel(directoryInfo);
         }
     }
 }

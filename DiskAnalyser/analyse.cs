@@ -1,9 +1,9 @@
 ﻿using DiskAnalyser.Models;
+using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Presenters;
-using DiskAnalyser.Presenters.Models;
 using DiskAnalyser.Views;
 using System;
-using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -12,95 +12,44 @@ namespace DiskAnalyser
     public partial class analyse : Form, IAnalysisView
     {
         private readonly IAnalysePresenter _analysePresenter;
-        //private readonly BackgroundWorker _driveAnalysisWorker;
-        private AnalysisCancelToken _cancelToken;
-        private DriveInfo _driveInfo;
-        private IMainView _mainView;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public analyse(IAnalysePresenter analysePresenter)
         {
             InitializeComponent();
 
-            //_driveAnalysisWorker = new BackgroundWorker
-            //{
-            //    WorkerReportsProgress = true
-            //};
-
-            //_driveAnalysisWorker.DoWork += DriveAnalysisWorker_DoWork;
-            //_driveAnalysisWorker.ProgressChanged += DriveAnalysisWorker_ProgressChanged;
-            //_driveAnalysisWorker.RunWorkerCompleted += DriveAnalysisWorker_RunWorkerCompleted;
-
+            _cancellationTokenSource = new CancellationTokenSource();
             _analysePresenter = analysePresenter;
         }
 
-        public IProgress<(IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory, int counter)> Progress { get; private set; }
+        public IProgress<string> DirectoryAdded { get; private set; }
 
-        public void DirectoryAdded(IFileSystemDescriptionModel subDirectory, IFileSystemDescriptionModel directory)
-        {
-            var userState = (subDirectory, directory);
-            //_driveAnalysisWorker.ReportProgress(0, userState);
-        }
+        public IProgress<int> DirectoryAnalysed { get; private set; }
 
-        public void SetParent(IMainView mainView)
+        public async Task<DirectoryModel> AnalyseDriveAsync(DriveValue drive)
         {
-            _mainView = mainView;
-        }
+            DirectoryAdded = new Progress<string>();
+            DirectoryAnalysed = new Progress<int>();
 
-        public void SetSelectedDrive(DriveInfo driveInfo)
-        {
-            _driveInfo = driveInfo;
-        }
+            ((Progress<string>)DirectoryAdded).ProgressChanged += (s, directory) => lblCurrentDirectory.Text = directory;
+            ((Progress<int>)DirectoryAnalysed).ProgressChanged += (s, totalNumberOfFiles) => lblTotalFiles.Text = $"Total File: {totalNumberOfFiles}";
 
-        private void _progress_ProgressChanged(object sender, (IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory, int counter) e)
-        {
-            if (e.counter == 0)
-            {
-                _mainView.DirectoryAdded(e.SubDirectory, e.Directory);
-                lblCurrentDirectory.Text = e.Directory.FullName;
-            }
+            var cancellationToken = _cancellationTokenSource.Token;
+            var directoryModel = await _analysePresenter.AnalyseDriveAsync(drive, cancellationToken);
+
+            return directoryModel;
         }
 
         private void analyse_Load(object sender, EventArgs e)
         {
+            this.CenterToParent();
+
             _analysePresenter.SetView(this);
-        }
-
-        private async void analyse_Shown(object sender, EventArgs e)
-        {
-            Progress = new Progress<(IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory, int counter)>();
-            ((Progress<(IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory, int counter)>)Progress).ProgressChanged += _progress_ProgressChanged;
-
-            _cancelToken = new AnalysisCancelToken();
-            await Task.Run(() => _analysePresenter.AnalyseDriveAsync(_driveInfo, _cancelToken));
-
-            //_driveAnalysisWorker.RunWorkerAsync(_driveInfo);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            _cancelToken.Cancel();
-            this.Close();
+            _cancellationTokenSource.Cancel();
         }
-
-        //private void DriveAnalysisWorker_DoWork(object sender, DoWorkEventArgs e)
-        //{
-        //    _cancelToken = new AnalysisCancelToken();
-        //    _analysePresenter.AnalyseDrive((DriveInfo)e.Argument, _cancelToken);
-        //}
-
-        //private void DriveAnalysisWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        //{
-        //    var userState = ((IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory))e.UserState;
-        //    _mainView.DirectoryAdded(userState.SubDirectory, userState.Directory);
-
-        //    lblCurrentDirectory.Text = userState.Directory.FullName;
-        //    //lblCurrentDirectory.Update();
-        //    //btnCancel.Focus();
-        //}
-
-        //private void DriveAnalysisWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        //{
-        //    this.Close();
-        //}
     }
 }

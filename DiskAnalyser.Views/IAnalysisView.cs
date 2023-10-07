@@ -1,17 +1,16 @@
 ﻿using DiskAnalyser.Models;
+using DiskAnalyser.Models.ValueObjects;
 using System;
-using System.IO;
+using System.Threading.Tasks;
 
 namespace DiskAnalyser.Views
 {
     public interface IAnalysisView
     {
-        IProgress<(IFileSystemDescriptionModel SubDirectory, IFileSystemDescriptionModel Directory, int counter)> Progress { get; }
+        IProgress<string> DirectoryAdded { get; }
 
-        void DirectoryAdded(IFileSystemDescriptionModel subDirectory, IFileSystemDescriptionModel directory);
+        IProgress<int> DirectoryAnalysed { get; }
 
-        void SetParent(IMainView mainView);
-
-        void SetSelectedDrive(DriveInfo driveInfo);
+        Task<DirectoryModel> AnalyseDriveAsync(DriveValue drive);
     }
 }

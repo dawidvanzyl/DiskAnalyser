@@ -1,16 +1,20 @@
-﻿using System.IO;
-
-namespace DiskAnalyser.Models
+﻿namespace DiskAnalyser.Models
 {
-    public class DriveModel
+    public class DriveModel : DirectoryModel
     {
-        public DriveModel(DriveInfo driveInfo)
+        protected DriveModel(string name, string description)
+            : base(name, name, null)
         {
-            Description = $"{driveInfo.VolumeLabel} ({driveInfo.Name.TrimEnd()})";
-            DriveInfo = driveInfo;
+            Description = description;
         }
 
         public string Description { get; }
-        public DriveInfo DriveInfo { get; }
+
+        public static DriveModel From(string name, string description)
+        {
+            return new DriveModel(
+                name,
+                description);
+        }
     }
 }
