@@ -1,4 +1,5 @@
-﻿using DiskAnalyser.Models;
+﻿using DiskAnalyser.Converters;
+using DiskAnalyser.Models;
 using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Presenters;
 using DiskAnalyser.Views;
@@ -16,7 +17,6 @@ namespace DiskAnalyser
         private readonly IServiceProvider _serviceProvider;
 
         private IProgress<int> _directoriesProcessed;
-        private Snapshot _snapshot;
 
         public main(IMainPresenter mainPresenter, IServiceProvider serviceProvider)
         {
@@ -52,8 +52,6 @@ namespace DiskAnalyser
             };
 
             var driveNode = await CreateDriveNodeAsync(drive);
-
-            _snapshot = new Snapshot(driveNode, analysis.Cancelled, DateTime.Now);
 
             tvTreeView.Nodes.Add(driveNode);
             gbxSnapshot.Text = $"{drive.Name} snapshot, {DateTime.Now:yyyy, dd MMM HH:mm}";
@@ -108,16 +106,18 @@ namespace DiskAnalyser
             await _presenter.AnalyseDriveAsync();
         }
 
-        private async Task<DirectoryNode> CreateDirectoryNodeAsync(DirectoryModel directory, DirectoryNode parentNode)
+        private async Task<TreeNode> CreateDirectoryNodeAsync(DirectoryModel directory, TreeNode parentNode)
         {
             return await Task.Run(async () =>
             {
                 _directoriesProcessed.Report(0);
 
-                var directoryNode = new DirectoryNode
+                var directorySizeNode = SizeConverter.GetNodeSize(directory.Size);
+                var directoryTotalSizeNode = SizeConverter.GetNodeSize(directory.TotalSize);
+                var directoryNode = new TreeNode
                 {
                     Name = directory.FullPath,
-                    Text = directory.Name,
+                    Text = $"{directory.Name} [{directorySizeNode}, Total Size: {directoryTotalSizeNode}]",
                     Tag = directory
                 };
 
@@ -131,13 +131,27 @@ namespace DiskAnalyser
                     }
                 }
 
+                if (directory.HasFiles())
+                {
+                    foreach (var file in directory.GetFiles())
+                    {
+                        var fileSizeNode = SizeConverter.GetNodeSize(file.Size);
+                        directoryNode.Nodes.Add(new TreeNode
+                        {
+                            Name = file.FullPath,
+                            Text = $"{file.Name} [{fileSizeNode}]",
+                            Tag = file
+                        });
+                    }
+                }
+
                 return directoryNode;
             });
         }
 
-        private async Task<DirectoryNode> CreateDriveNodeAsync(DirectoryModel drive)
+        private async Task<TreeNode> CreateDriveNodeAsync(DirectoryModel drive)
         {
-            return await CreateDirectoryNodeAsync(drive, new DirectoryNode());
+            return await CreateDirectoryNodeAsync(drive, new TreeNode());
         }
 
         private void main_Load(object sender, System.EventArgs e)

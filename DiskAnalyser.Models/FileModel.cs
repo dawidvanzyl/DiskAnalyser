@@ -1,6 +1,5 @@
 ﻿using DiskAnalyser.Models.Abstracts;
 using DiskAnalyser.Models.Enums;
-using System.Collections.Immutable;
 
 namespace DiskAnalyser.Models
 {
@@ -23,11 +22,6 @@ namespace DiskAnalyser.Models
         public static FileModel From(string name, string fullName, long size, DirectoryModel parent)
         {
             return new FileModel(name, fullName, size, parent);
-        }
-
-        public override ImmutableArray<IFileSystemModel> GetChildren()
-        {
-            return new ImmutableArray<IFileSystemModel>();
         }
     }
 }

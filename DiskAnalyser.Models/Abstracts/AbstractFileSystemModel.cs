@@ -1,5 +1,4 @@
 ﻿using DiskAnalyser.Models.Enums;
-using System.Collections.Immutable;
 
 namespace DiskAnalyser.Models.Abstracts
 {
@@ -16,8 +15,6 @@ namespace DiskAnalyser.Models.Abstracts
         long Size { get; }
 
         long TotalSize { get; }
-
-        ImmutableArray<IFileSystemModel> GetChildren();
     }
 
     public abstract class AbstractFileSystemModel : IFileSystemModel
@@ -40,8 +37,6 @@ namespace DiskAnalyser.Models.Abstracts
         public abstract long Size { get; }
 
         public abstract long TotalSize { get; }
-
-        public abstract ImmutableArray<IFileSystemModel> GetChildren();
 
         public override string ToString()
         {

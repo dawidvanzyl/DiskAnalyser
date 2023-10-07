@@ -57,17 +57,25 @@ namespace DiskAnalyser.Models
             UpdateTotalSize(size);
         }
 
-        public override ImmutableArray<IFileSystemModel> GetChildren()
-        {
-            return children.ToImmutableArray();
-        }
-
         public ImmutableArray<DirectoryModel> GetDirectories()
         {
             return children
                 .Where(child => child.FileSystemType == FileSystemTypes.Directory)
                 .Cast<DirectoryModel>()
                 .ToImmutableArray();
+        }
+
+        public ImmutableArray<FileModel> GetFiles()
+        {
+            return children
+                .Where(child => child.FileSystemType == FileSystemTypes.File)
+                .Cast<FileModel>()
+                .ToImmutableArray();
+        }
+
+        public bool HasFiles()
+        {
+            return children.Exists(child => child.FileSystemType == FileSystemTypes.File);
         }
 
         public bool HasSubDirectories()
