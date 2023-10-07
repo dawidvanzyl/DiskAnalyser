@@ -2,11 +2,14 @@
 using DiskAnalyser.Views;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DiskAnalyser.Presenters
 {
     public interface IMainPresenter
     {
+        Task AnalyseDriveAsync();
+
         void InitializeDrives();
 
         void SetView(IMainView view);
@@ -15,6 +18,21 @@ namespace DiskAnalyser.Presenters
     public class MainPresenter : IMainPresenter
     {
         private IMainView _view;
+
+        public async Task AnalyseDriveAsync()
+        {
+            _view.DeleteDriveSnapShot();
+
+            _view.EnableDriveAnalysisProgressInfo();
+
+            var analysisValue = await _view.PerformDriveAnalysisAsync();
+
+            _view.ConfigureProgressTracking(analysisValue.Directory.TotalDirectoryCount + 1);
+
+            await _view.CreateDriveSnapshotAsync(analysisValue);
+
+            _view.DisableDriveAnalysisProgressInfo();
+        }
 
         public void InitializeDrives()
         {

@@ -1,4 +1,6 @@
-﻿namespace DiskAnalyser.Models
+﻿using DiskAnalyser.Models.Enums;
+
+namespace DiskAnalyser.Models
 {
     public class DriveModel : DirectoryModel
     {
@@ -9,6 +11,8 @@
         }
 
         public string Description { get; }
+
+        public override FileSystemTypes FileSystemType => FileSystemTypes.Drive;
 
         public static DriveModel From(string name, string description)
         {

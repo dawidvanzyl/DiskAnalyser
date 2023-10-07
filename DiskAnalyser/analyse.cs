@@ -1,5 +1,4 @@
-﻿using DiskAnalyser.Models;
-using DiskAnalyser.Models.ValueObjects;
+﻿using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Presenters;
 using DiskAnalyser.Views;
 using System;
@@ -26,7 +25,7 @@ namespace DiskAnalyser
 
         public IProgress<int> DirectoryAnalysed { get; private set; }
 
-        public async Task<DirectoryModel> AnalyseDriveAsync(DriveValue drive)
+        public async Task<AnalysisValue> AnalyseDriveAsync(DriveValue drive)
         {
             DirectoryAdded = new Progress<string>();
             DirectoryAnalysed = new Progress<int>();
@@ -37,7 +36,7 @@ namespace DiskAnalyser
             var cancellationToken = _cancellationTokenSource.Token;
             var directoryModel = await _analysePresenter.AnalyseDriveAsync(drive, cancellationToken);
 
-            return directoryModel;
+            return AnalysisValue.Create(directoryModel, cancellationToken.IsCancellationRequested);
         }
 
         private void analyse_Load(object sender, EventArgs e)

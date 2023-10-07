@@ -1,4 +1,5 @@
 ﻿using DiskAnalyser.Models.Abstracts;
+using DiskAnalyser.Models.Enums;
 using System.Collections.Immutable;
 
 namespace DiskAnalyser.Models
@@ -12,6 +13,8 @@ namespace DiskAnalyser.Models
         {
             this.size = size;
         }
+
+        public override FileSystemTypes FileSystemType => FileSystemTypes.File;
 
         public override long Size => size;
 

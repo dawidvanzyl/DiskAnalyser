@@ -1,9 +1,11 @@
-﻿using DiskAnalyser.Models.ValueObjects;
+﻿using DiskAnalyser.Models;
+using DiskAnalyser.Models.ValueObjects;
 using DiskAnalyser.Presenters;
 using DiskAnalyser.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DiskAnalyser
@@ -13,35 +15,87 @@ namespace DiskAnalyser
         private readonly IMainPresenter _presenter;
         private readonly IServiceProvider _serviceProvider;
 
+        private IProgress<int> _directoriesProcessed;
+        private Snapshot _snapshot;
+
         public main(IMainPresenter mainPresenter, IServiceProvider serviceProvider)
         {
             InitializeComponent();
 
             _presenter = mainPresenter;
             _serviceProvider = serviceProvider;
+
+            toolStripSnapshot.Visible = false;
+            toolStripProcessing.Visible = false;
+            lblEstimatedTimeLeft.Visible = false;
         }
 
-        //public void DirectoryAdded(IFileSystemDescriptionModel subDirectory, IFileSystemDescriptionModel directory)
-        //{
-        //    var treeNode = tvTreeView.Nodes
-        //        .Find(directory.FullName, searchAllChildren: true)
-        //        .SingleOrDefault();
+        public void ConfigureProgressTracking(int totalDirectoryCount)
+        {
+            lblEstimatedTimeLeft.Visible = true;
+            lblProcessingDirectories.Text = "Creating Snapshot";
+            pbProcessingDirectories.Value = 0;
+            pbProcessingDirectories.Maximum = totalDirectoryCount + 1;
+            pbProcessingDirectories.ProgressBar.Style = ProgressBarStyle.Blocks;
+        }
 
-        //    if (treeNode is null)
-        //    {
-        //        treeNode = new TreeNode
-        //        {
-        //            Name = directory.FullName,
-        //            Text = directory.Name
-        //        };
+        public async Task CreateDriveSnapshotAsync(AnalysisValue analysis)
+        {
+            var drive = analysis.Directory;
+            var directoryProcessingEstimateValue = DirectoryProcessingEstimateValue.Create(drive.TotalDirectoryCount + 1);
+            _directoriesProcessed = new Progress<int>();
+            (_directoriesProcessed as Progress<int>).ProgressChanged += (object sender, int progress) =>
+            {
+                pbProcessingDirectories.Value++;
+                var estimatedTimeSpan = directoryProcessingEstimateValue.GetEstimate(pbProcessingDirectories.Value);
+                lblEstimatedTimeLeft.Text = $"Time left {directoryProcessingEstimateValue.FormattedEstimate(estimatedTimeSpan)}";
+            };
 
-        //        tvTreeView.Nodes.Add(treeNode);
-        //    }
+            var driveNode = await CreateDriveNodeAsync(drive);
 
-        //    treeNode.Nodes.Add(
-        //        subDirectory.FullName,
-        //        subDirectory.Name);
-        //}
+            _snapshot = new Snapshot(driveNode, analysis.Cancelled, DateTime.Now);
+
+            tvTreeView.Nodes.Add(driveNode);
+            gbxSnapshot.Text = $"{drive.Name} snapshot, {DateTime.Now:yyyy, dd MMM HH:mm}";
+
+            if (analysis.Cancelled)
+            {
+                gbxSnapshot.Text = $"{gbxSnapshot.Text}. Incomplete.";
+            }
+
+            toolStripSnapshot.Visible = true;
+        }
+
+        public void DeleteDriveSnapShot()
+        {
+            tvTreeView.Nodes.Clear();
+        }
+
+        public void DisableDriveAnalysisProgressInfo()
+        {
+            toolStripProcessing.Visible = false;
+            lblEstimatedTimeLeft.Visible = false;
+        }
+
+        public void EnableDriveAnalysisProgressInfo()
+        {
+            toolStripProcessing.Visible = true;
+            pbProcessingDirectories.ProgressBar.Style = ProgressBarStyle.Marquee;
+            lblProcessingDirectories.Text = "Analysing...";
+        }
+
+        public async Task<AnalysisValue> PerformDriveAnalysisAsync()
+        {
+            var analyse = _serviceProvider.GetRequiredService<analyse>();
+            analyse.Show(this);
+
+            var analyseView = analyse as IAnalysisView;
+            var analysisValue = await analyseView.AnalyseDriveAsync((DriveValue)cmbDrives.ComboBox.SelectedValue);
+
+            analyse.Close();
+
+            return analysisValue;
+        }
 
         public void SetDrives(IList<DriveValue> drives)
         {
@@ -49,110 +103,46 @@ namespace DiskAnalyser
             cmbDrives.ComboBox.DisplayMember = "Description";
         }
 
-        private async void btnAnalyseDrive_Click(object sender, System.EventArgs e)
+        private async void btnAnalyseDrive_Click(object sender, EventArgs e)
         {
-            tvTreeView.Nodes.Clear();
+            await _presenter.AnalyseDriveAsync();
+        }
 
-            var analyse = _serviceProvider.GetRequiredService<analyse>();
-            analyse.Show(this);
+        private async Task<DirectoryNode> CreateDirectoryNodeAsync(DirectoryModel directory, DirectoryNode parentNode)
+        {
+            return await Task.Run(async () =>
+            {
+                _directoriesProcessed.Report(0);
 
-            var analyseView = analyse as IAnalysisView;
-            await analyseView.AnalyseDriveAsync((DriveValue)cmbDrives.ComboBox.SelectedValue);
+                var directoryNode = new DirectoryNode
+                {
+                    Name = directory.FullPath,
+                    Text = directory.Name,
+                    Tag = directory
+                };
 
-            analyse.Close();
+                parentNode.Nodes.Add(directoryNode);
+
+                if (directory.HasSubDirectories())
+                {
+                    foreach (var subDirectory in directory.GetDirectories())
+                    {
+                        await CreateDirectoryNodeAsync(subDirectory, directoryNode);
+                    }
+                }
+
+                return directoryNode;
+            });
+        }
+
+        private async Task<DirectoryNode> CreateDriveNodeAsync(DirectoryModel drive)
+        {
+            return await CreateDirectoryNodeAsync(drive, new DirectoryNode());
         }
 
         private void main_Load(object sender, System.EventArgs e)
         {
             _presenter.SetView(this);
         }
-
-        ////private void DriveAnalysisWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        ////{
-        ////    var directoryNodeAddedEventArgs = e.UserState as DirectoryNodeAddedEventArgs;
-
-        ////    TreeNode treeNode = default;
-        ////    var directoryNode = directoryNodeAddedEventArgs.DirectoryNode;
-
-        ////    treeNode = tvTreeView.Nodes
-        ////        .Find(directoryNode.FullName, searchAllChildren: true)
-        ////        .SingleOrDefault();
-
-        ////    if (treeNode is null)
-        ////    {
-        ////        treeNode = new TreeNode
-        ////        {
-        ////            Name = directoryNodeAddedEventArgs.DirectoryNode.FullName,
-        ////            Text = directoryNodeAddedEventArgs.DirectoryNode.Name
-        ////        };
-
-        ////        tvTreeView.Nodes.Add(treeNode);
-        ////    }
-
-        ////    treeNode.Nodes.Add(
-        ////        directoryNodeAddedEventArgs.DirectoryModel.FullName,
-        ////        directoryNodeAddedEventArgs.DirectoryModel.Name);
-        ////}
-
-        //private void DriveAnalysisWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        //{
-        //    lblCurrentDirectory.Text = $"Analysis Completed";
-        //}
-
-        //private void Presenter_DirectoryNodeAdded(object sender, DirectoryNodeAddedEventArgs e)
-        //{
-        //    //driveAnalysisWorker.ReportProgress(0, e);
-
-        //    var directoryNodeAddedEventArgs = e; //.UserState as DirectoryNodeAddedEventArgs;
-
-        //    TreeNode treeNode = default;
-        //    var directoryNode = directoryNodeAddedEventArgs.DirectoryNode;
-
-        //    treeNode = tvTreeView.Nodes
-        //        .Find(directoryNode.FullName, searchAllChildren: true)
-        //        .SingleOrDefault();
-
-        //    if (treeNode is null)
-        //    {
-        //        treeNode = new TreeNode
-        //        {
-        //            Name = directoryNodeAddedEventArgs.DirectoryNode.FullName,
-        //            Text = directoryNodeAddedEventArgs.DirectoryNode.Name
-        //        };
-
-        //        tvTreeView.Nodes.Add(treeNode);
-        //    }
-
-        //    treeNode.Nodes.Add(
-        //        directoryNodeAddedEventArgs.DirectoryModel.FullName,
-        //        directoryNodeAddedEventArgs.DirectoryModel.Name);
-
-        //    lblCurrentDirectory.Text = e.DirectoryModel.FullName;
-
-        //    this.Refresh();
-        //}
-
-        //private void Presenter_DrivesInitialized(object sender, DrivesInitializedEventArgs e)
-        //{
-        //    cmbDrives.ComboBox.DataSource = e.Drives.ToList();
-        //    cmbDrives.ComboBox.DisplayMember = "Value";
-        //    cmbDrives.ComboBox.ValueMember = "Key";
-        //}
-
-        //private void TryAdd(TreeNodeCollection nodes, IFileSystemNode fileSystemNode)
-        //{
-        //    var treeNode = nodes.ContainsKey(fileSystemNode.Name)
-        //        ? nodes.Find(fileSystemNode.Name, searchAllChildren: true).Single()
-        //        : nodes.Add(fileSystemNode.Name, fileSystemNode.Name);
-
-        //    ImmutableArray<IFileSystemNode> children = fileSystemNode.GetChildren();
-        //    if (children != null && children.Any())
-        //    {
-        //        foreach (var child in children)
-        //        {
-        //            TryAdd(treeNode.Nodes, child);
-        //        }
-        //    }
-        //}
     }
 }

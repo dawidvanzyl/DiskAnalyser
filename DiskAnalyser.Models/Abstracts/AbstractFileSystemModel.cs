@@ -1,9 +1,12 @@
-﻿using System.Collections.Immutable;
+﻿using DiskAnalyser.Models.Enums;
+using System.Collections.Immutable;
 
 namespace DiskAnalyser.Models.Abstracts
 {
     public interface IFileSystemModel
     {
+        FileSystemTypes FileSystemType { get; }
+
         string FullPath { get; }
 
         string Name { get; }
@@ -26,6 +29,8 @@ namespace DiskAnalyser.Models.Abstracts
             Parent = parent;
         }
 
+        public abstract FileSystemTypes FileSystemType { get; }
+
         public string FullPath { get; }
 
         public string Name { get; }
@@ -37,5 +42,10 @@ namespace DiskAnalyser.Models.Abstracts
         public abstract long TotalSize { get; }
 
         public abstract ImmutableArray<IFileSystemModel> GetChildren();
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

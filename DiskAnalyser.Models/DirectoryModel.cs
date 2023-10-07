@@ -1,4 +1,5 @@
 ﻿using DiskAnalyser.Models.Abstracts;
+using DiskAnalyser.Models.Enums;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -20,9 +21,15 @@ namespace DiskAnalyser.Models
             this.parent = parent;
         }
 
+        public int DirectoryCount { get; private set; }
+
         public int FileCount { get; private set; }
 
+        public override FileSystemTypes FileSystemType => FileSystemTypes.Directory;
+
         public override long Size => size;
+
+        public int TotalDirectoryCount { get; private set; }
 
         public int TotalFileCount { get; private set; }
 
@@ -36,6 +43,8 @@ namespace DiskAnalyser.Models
         public void AddDirectory(DirectoryModel directory)
         {
             children.Add(directory);
+            DirectoryCount++;
+            UpdateTotalDirectoryCount();
         }
 
         public void AddFiles(IEnumerable<FileModel> files)
@@ -51,6 +60,25 @@ namespace DiskAnalyser.Models
         public override ImmutableArray<IFileSystemModel> GetChildren()
         {
             return children.ToImmutableArray();
+        }
+
+        public ImmutableArray<DirectoryModel> GetDirectories()
+        {
+            return children
+                .Where(child => child.FileSystemType == FileSystemTypes.Directory)
+                .Cast<DirectoryModel>()
+                .ToImmutableArray();
+        }
+
+        public bool HasSubDirectories()
+        {
+            return children.Exists(child => child.FileSystemType == FileSystemTypes.Directory);
+        }
+
+        private void UpdateTotalDirectoryCount()
+        {
+            TotalDirectoryCount++;
+            parent?.UpdateTotalDirectoryCount();
         }
 
         private void UpdateTotalFileCount(int fileCount)

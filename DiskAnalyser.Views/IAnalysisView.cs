@@ -1,5 +1,4 @@
-﻿using DiskAnalyser.Models;
-using DiskAnalyser.Models.ValueObjects;
+﻿using DiskAnalyser.Models.ValueObjects;
 using System;
 using System.Threading.Tasks;
 
@@ -11,6 +10,6 @@ namespace DiskAnalyser.Views
 
         IProgress<int> DirectoryAnalysed { get; }
 
-        Task<DirectoryModel> AnalyseDriveAsync(DriveValue drive);
+        Task<AnalysisValue> AnalyseDriveAsync(DriveValue drive);
     }
 }
