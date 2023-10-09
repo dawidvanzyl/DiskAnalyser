@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(main));
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.topToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.cmbDrives = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -37,33 +37,30 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.gbxSnapshot = new System.Windows.Forms.GroupBox();
             this.tvTreeView = new System.Windows.Forms.TreeView();
-            this.toolStripSnapshot = new System.Windows.Forms.ToolStrip();
-            this.btnSaveSnapshot = new System.Windows.Forms.ToolStripButton();
             this.toolStripProcessing = new System.Windows.Forms.ToolStrip();
             this.lblProcessingDirectories = new System.Windows.Forms.ToolStripLabel();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.pbProcessingDirectories = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.lblEstimatedTimeLeft = new System.Windows.Forms.ToolStripLabel();
-            this.toolStrip1.SuspendLayout();
+            this.topToolStrip.SuspendLayout();
             this.panel1.SuspendLayout();
             this.gbxSnapshot.SuspendLayout();
-            this.toolStripSnapshot.SuspendLayout();
             this.toolStripProcessing.SuspendLayout();
             this.SuspendLayout();
             // 
-            // toolStrip1
+            // topToolStrip
             // 
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.topToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel1,
             this.cmbDrives,
             this.toolStripSeparator1,
             this.btnAnalyseDrive});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1057, 25);
-            this.toolStrip1.TabIndex = 9;
-            this.toolStrip1.Text = "toolStrip1";
+            this.topToolStrip.Location = new System.Drawing.Point(0, 0);
+            this.topToolStrip.Name = "topToolStrip";
+            this.topToolStrip.Size = new System.Drawing.Size(1057, 25);
+            this.topToolStrip.TabIndex = 9;
+            this.topToolStrip.Text = "toolStrip1";
             // 
             // toolStripLabel1
             // 
@@ -75,6 +72,7 @@
             // 
             this.cmbDrives.Name = "cmbDrives";
             this.cmbDrives.Size = new System.Drawing.Size(121, 25);
+            this.cmbDrives.SelectedIndexChanged += new System.EventHandler(this.cmbDrives_SelectedIndexChanged);
             // 
             // toolStripSeparator1
             // 
@@ -95,7 +93,6 @@
             // panel1
             // 
             this.panel1.Controls.Add(this.gbxSnapshot);
-            this.panel1.Controls.Add(this.toolStripSnapshot);
             this.panel1.Controls.Add(this.toolStripProcessing);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 25);
@@ -109,7 +106,7 @@
             this.gbxSnapshot.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gbxSnapshot.Location = new System.Drawing.Point(0, 0);
             this.gbxSnapshot.Name = "gbxSnapshot";
-            this.gbxSnapshot.Size = new System.Drawing.Size(1057, 513);
+            this.gbxSnapshot.Size = new System.Drawing.Size(1057, 538);
             this.gbxSnapshot.TabIndex = 3;
             this.gbxSnapshot.TabStop = false;
             this.gbxSnapshot.Text = "No Snapshot";
@@ -119,28 +116,8 @@
             this.tvTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvTreeView.Location = new System.Drawing.Point(3, 19);
             this.tvTreeView.Name = "tvTreeView";
-            this.tvTreeView.Size = new System.Drawing.Size(1051, 491);
+            this.tvTreeView.Size = new System.Drawing.Size(1051, 516);
             this.tvTreeView.TabIndex = 0;
-            // 
-            // toolStripSnapshot
-            // 
-            this.toolStripSnapshot.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.toolStripSnapshot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnSaveSnapshot});
-            this.toolStripSnapshot.Location = new System.Drawing.Point(0, 513);
-            this.toolStripSnapshot.Name = "toolStripSnapshot";
-            this.toolStripSnapshot.Size = new System.Drawing.Size(1057, 25);
-            this.toolStripSnapshot.TabIndex = 2;
-            this.toolStripSnapshot.Text = "toolStrip2";
-            // 
-            // btnSaveSnapshot
-            // 
-            this.btnSaveSnapshot.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnSaveSnapshot.Image = ((System.Drawing.Image)(resources.GetObject("btnSaveSnapshot.Image")));
-            this.btnSaveSnapshot.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSaveSnapshot.Name = "btnSaveSnapshot";
-            this.btnSaveSnapshot.Size = new System.Drawing.Size(87, 22);
-            this.btnSaveSnapshot.Text = "Save Snapshot";
             // 
             // toolStripProcessing
             // 
@@ -195,17 +172,15 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1057, 588);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.toolStrip1);
+            this.Controls.Add(this.topToolStrip);
             this.Name = "main";
             this.Text = "Disk Analyser";
             this.Load += new System.EventHandler(this.main_Load);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
+            this.topToolStrip.ResumeLayout(false);
+            this.topToolStrip.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.gbxSnapshot.ResumeLayout(false);
-            this.toolStripSnapshot.ResumeLayout(false);
-            this.toolStripSnapshot.PerformLayout();
             this.toolStripProcessing.ResumeLayout(false);
             this.toolStripProcessing.PerformLayout();
             this.ResumeLayout(false);
@@ -214,7 +189,7 @@
         }
 
         #endregion
-        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStrip topToolStrip;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox cmbDrives;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -227,8 +202,6 @@
         private System.Windows.Forms.ToolStripProgressBar pbProcessingDirectories;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripLabel lblEstimatedTimeLeft;
-        private System.Windows.Forms.ToolStrip toolStripSnapshot;
-        private System.Windows.Forms.ToolStripButton btnSaveSnapshot;
         private System.Windows.Forms.GroupBox gbxSnapshot;
     }
 }

@@ -17,6 +17,9 @@ namespace DiskAnalyser
         private readonly IServiceProvider _serviceProvider;
 
         private IProgress<int> _directoriesProcessed;
+        private IProgress<Snapshot> _displaySnapshot;
+        private bool _preventSecondLoad;
+        private Snapshot _snapShot;
 
         public main(IMainPresenter mainPresenter, IServiceProvider serviceProvider)
         {
@@ -25,9 +28,9 @@ namespace DiskAnalyser
             _presenter = mainPresenter;
             _serviceProvider = serviceProvider;
 
-            toolStripSnapshot.Visible = false;
             toolStripProcessing.Visible = false;
             lblEstimatedTimeLeft.Visible = false;
+            _preventSecondLoad = false;
         }
 
         public void ConfigureProgressTracking(int totalDirectoryCount)
@@ -39,8 +42,10 @@ namespace DiskAnalyser
             pbProcessingDirectories.ProgressBar.Style = ProgressBarStyle.Blocks;
         }
 
-        public async Task CreateDriveSnapshotAsync(AnalysisValue analysis)
+        public async Task<Snapshot> CreateSnapshotAsync(AnalysisValue analysis)
         {
+            ConfigureProgressTracking(analysis.Directory.TotalDirectoryCount + 1);
+
             var drive = analysis.Directory;
             var directoryProcessingEstimateValue = DirectoryProcessingEstimateValue.Create(drive.TotalDirectoryCount + 1);
             _directoriesProcessed = new Progress<int>();
@@ -53,37 +58,42 @@ namespace DiskAnalyser
 
             var driveNode = await CreateDriveNodeAsync(drive);
 
-            tvTreeView.Nodes.Add(driveNode);
-            gbxSnapshot.Text = $"{drive.Name} snapshot, {DateTime.Now:yyyy, dd MMM HH:mm}";
+            _snapShot = Snapshot.Create(
+                driveNode,
+                drive,
+                analysis.Cancelled);
 
-            if (analysis.Cancelled)
-            {
-                gbxSnapshot.Text = $"{gbxSnapshot.Text}. Incomplete.";
-            }
-
-            toolStripSnapshot.Visible = true;
+            return _snapShot;
         }
 
-        public void DeleteDriveSnapShot()
+        public void DeleteSnapShot()
         {
+            DriveAnalysisProgressInfo("Delete Snapshot...");
+
+            Snapshot.Delete((DriveValue)cmbDrives.ComboBox.SelectedValue);
             tvTreeView.Nodes.Clear();
         }
 
         public void DisableDriveAnalysisProgressInfo()
         {
+            topToolStrip.Enabled = true;
             toolStripProcessing.Visible = false;
             lblEstimatedTimeLeft.Visible = false;
         }
 
-        public void EnableDriveAnalysisProgressInfo()
+        public void DriveAnalysisProgressInfo(string infoText)
         {
+            topToolStrip.Enabled = false;
             toolStripProcessing.Visible = true;
             pbProcessingDirectories.ProgressBar.Style = ProgressBarStyle.Marquee;
-            lblProcessingDirectories.Text = "Analysing...";
+            lblProcessingDirectories.Text = infoText;
+            toolStripProcessing.Refresh();
         }
 
         public async Task<AnalysisValue> PerformDriveAnalysisAsync()
         {
+            DriveAnalysisProgressInfo("Analysing...");
+
             var analyse = _serviceProvider.GetRequiredService<analyse>();
             analyse.Show(this);
 
@@ -103,7 +113,39 @@ namespace DiskAnalyser
 
         private async void btnAnalyseDrive_Click(object sender, EventArgs e)
         {
-            await _presenter.AnalyseDriveAsync();
+            DeleteSnapShot();
+            var analysisValue = await PerformDriveAnalysisAsync();
+            var snapshot = await CreateSnapshotAsync(analysisValue);
+            await SaveSnapshotAsync(snapshot);
+            DisableDriveAnalysisProgressInfo();
+        }
+
+        private async void cmbDrives_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_preventSecondLoad)
+            {
+                return;
+            }
+
+            _preventSecondLoad = true;
+            var drive = (DriveValue)cmbDrives.ComboBox.SelectedValue;
+            if (!Snapshot.Exists(drive))
+            {
+                return;
+            }
+
+            DriveAnalysisProgressInfo("Loading Snapshot...");
+
+            _displaySnapshot = new Progress<Snapshot>();
+            (_displaySnapshot as Progress<Snapshot>).ProgressChanged += (object sender, Snapshot snapshot) => LoadSnapshot(snapshot);
+
+            await Task.Run(async () =>
+            {
+                var snapShot = await Snapshot.LoadAsync(drive);
+                _displaySnapshot.Report(snapShot);
+            });
+
+            DisableDriveAnalysisProgressInfo();
         }
 
         private async Task<TreeNode> CreateDirectoryNodeAsync(DirectoryModel directory, TreeNode parentNode)
@@ -154,9 +196,30 @@ namespace DiskAnalyser
             return await CreateDirectoryNodeAsync(drive, new TreeNode());
         }
 
+        private void LoadSnapshot(Snapshot snapshot)
+        {
+            tvTreeView.Nodes.Clear();
+            tvTreeView.Nodes.AddRange(snapshot.Nodes);
+            gbxSnapshot.Text = snapshot.Description;
+        }
+
         private void main_Load(object sender, System.EventArgs e)
         {
             _presenter.SetView(this);
+        }
+
+        private async Task SaveSnapshotAsync(Snapshot snapshot)
+        {
+            DriveAnalysisProgressInfo("Saving Snapshot...");
+
+            _displaySnapshot = new Progress<Snapshot>();
+            (_displaySnapshot as Progress<Snapshot>).ProgressChanged += (object sender, Snapshot snapshot) => LoadSnapshot(snapshot);
+
+            await Task.Run(() =>
+            {
+                snapshot.Save();
+                _displaySnapshot.Report(snapshot);
+            });
         }
     }
 }
