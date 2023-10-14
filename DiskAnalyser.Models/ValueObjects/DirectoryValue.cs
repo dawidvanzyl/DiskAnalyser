@@ -75,7 +75,7 @@ namespace DiskAnalyser.Models.ValueObjects
             {
                 return directoryInfo.GetDirectories().Length > 0;
             }
-            catch (DirectoryNotFoundException)
+            catch (IOException)
             {
                 return false;
             }
